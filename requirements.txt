@@ -1,0 +1,7 @@
+# Deliberately small. No Redis, no Celery, no ORM: a single-process FastAPI
+# app with APScheduler-style manual refresh is enough at this scale, and
+# fewer moving parts means it actually runs on a laptop.
+httpx>=0.28
+feedparser>=6.0
+fastapi>=0.115
+uvicorn>=0.32

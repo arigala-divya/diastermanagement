@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local database - rebuilt by `python -m backend.pipeline`
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
