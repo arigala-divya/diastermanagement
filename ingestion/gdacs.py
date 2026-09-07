@@ -15,6 +15,10 @@ from processing.geo import nearest_district
 from processing.taxonomy import GDACS_TYPES, severity_from_gdacs
 
 URL = "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH"
+# GDACS is intermittently degraded - the same SEARCH URL returns 200, then 400,
+# then times out within a few hours. EVENTS4APP serves recent events without a
+# date range and stays up when SEARCH does not, so it is tried as a fallback.
+FALLBACK_URL = "https://www.gdacs.org/gdacsapi/api/events/geteventlist/EVENTS4APP"
 LICENCE = "GDACS (JRC/UN) - open, attribution required"
 
 
@@ -27,9 +31,21 @@ def fetch(client, districts: dict, start: str, end: str = "", country: str = "In
         "toDate": end or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
 
-    resp = client.get(URL, params=params)
-    resp.raise_for_status()
-    payload = resp.json()
+    try:
+        resp = client.get(URL, params=params)
+        resp.raise_for_status()
+        payload = resp.json()
+    except Exception as exc:  # noqa: BLE001 - fall back rather than lose the source
+        log(f"  GDACS: SEARCH unavailable ({type(exc).__name__}), trying EVENTS4APP")
+        resp = client.get(FALLBACK_URL, params={"country": country})
+        resp.raise_for_status()
+        payload = resp.json()
+        # EVENTS4APP ignores the date range, so filter to the window ourselves.
+        payload["features"] = [
+            f for f in payload.get("features", [])
+            if str((f.get("properties") or {}).get("fromdate", ""))[:10] >= start
+            or not (f.get("properties") or {}).get("fromdate")
+        ]
 
     return [s for s in (signal_from_feature(f, districts) for f in payload.get("features", [])) if s]
 
