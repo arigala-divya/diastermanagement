@@ -324,8 +324,10 @@ function showDetail(f, groupSize = 1) {
   const col = HAZARD_COLORS[p.hazard_type] || HAZARD_COLORS.OTHER;
   const [cb, cl] = CONF_BADGE[p.confidence] || CONF_BADGE.REPORTED;
   const srcs = (p.sources || []).slice().sort((a, b) => a.tier - b.tier);
-
-  const agencies = [...new Set(srcs.map((s) => s.agency).filter(Boolean))];
+  // Official/modelled agencies and press coverage are shown separately: a
+  // newspaper report is not an agency confirmation and must not look like one.
+  const official = srcs.filter((s) => s.tier <= 2);
+  const coverage = srcs.filter((s) => s.tier === 3);
 
   $('detail').innerHTML = `
     <div class="lhead"><button class="back" id="dback">&larr; All events</button></div>
@@ -356,8 +358,8 @@ function showDetail(f, groupSize = 1) {
     </div>
 
     <div class="dsec">
-      <div class="st">Confirming agencies (${agencies.length || 0})</div>
-      ${srcs.map((s) => {
+      <div class="st">Confirming agencies (${official.length})</div>
+      ${official.map((s) => {
         const [tb, tl] = TIER_BADGE[s.tier] || TIER_BADGE[3];
         return `<a class="src" href="${esc(s.url)}" target="_blank" rel="noopener">
           <div class="top"><span class="ag">${esc(s.agency || s.source)}</span>
@@ -365,12 +367,24 @@ function showDetail(f, groupSize = 1) {
             <span style="margin-left:auto;font-size:10px;color:var(--muted)">${esc(s.source)}</span></div>
           <div class="hl">${esc(s.published_at ? ist(s.published_at) : '')}</div>
         </a>`;
-      }).join('') || '<div style="color:var(--muted);font-size:11px">No source records</div>'}
+      }).join('') || '<div style="color:var(--muted);font-size:11px">No official source for this event — it is news-reported only.</div>'}
       <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
         Links open the issuing agency's original record. Always verify against the
         authoritative source before acting.
       </div>
-    </div>`;
+    </div>
+
+    ${coverage.length ? `<div class="dsec">
+      <div class="st">Related coverage (${coverage.length})</div>
+      ${coverage.map((s) => `<a class="src" href="${esc(s.url)}" target="_blank" rel="noopener">
+        <div class="top"><span class="ag" style="font-weight:500">${esc(s.headline || '')}</span></div>
+        <div class="hl">${esc(s.agency || 'Unknown publisher')}${
+          s.published_at ? ' &middot; ' + esc(ist(s.published_at)) : ''}</div>
+      </a>`).join('')}
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
+        Headlines and links only. Press reporting is not an official confirmation.
+      </div>
+    </div>` : ''}`;
 
   $('dx').onclick = closeDetail;
   $('dback').onclick = closeDetail;

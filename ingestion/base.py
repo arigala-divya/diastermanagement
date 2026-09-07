@@ -21,7 +21,7 @@ import httpx
 # fail verification from some networks. Data is public and read-only, so we
 # proceed unverified rather than losing the feed entirely.
 VERIFY_TLS = False
-TIMEOUT = 45
+TIMEOUT = 60
 
 USER_AGENT = "IIRS-ISRO-DisasterIntelligence/0.1 (internal research dashboard)"
 
@@ -53,11 +53,15 @@ class Signal:
 
 
 def new_client() -> httpx.Client:
+    # Government and aggregator endpoints time out intermittently under load;
+    # GDACS in particular. Connection-level retries stop a transient blip from
+    # marking a healthy feed as failed.
     return httpx.Client(
         timeout=TIMEOUT,
         follow_redirects=True,
         verify=VERIFY_TLS,
         headers={"User-Agent": USER_AGENT},
+        transport=httpx.HTTPTransport(retries=2),
     )
 
 

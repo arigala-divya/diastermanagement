@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 
 from backend.db import connect, init_db, load_districts, utcnow
-from ingestion import gdacs, sachet, usgs
+from ingestion import gdacs, news, sachet, usgs
 from ingestion.base import Signal, content_hash, log, new_client
 from processing.correlate import (
     confidence_for,
@@ -126,10 +126,25 @@ def _refresh_derived(conn):
         )
 
 
+def _store_article(conn, signal: Signal, event_id):
+    conn.execute(
+        """INSERT INTO news_articles
+             (url, headline, snippet, publisher, published_at, hazard_type,
+              state, district, event_id)
+           VALUES (?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(url) DO UPDATE SET event_id = excluded.event_id""",
+        (signal.url, signal.headline, signal.raw, signal.agency,
+         signal.published_at, signal.hazard_type, signal.state,
+         signal.district, event_id),
+    )
+
+
 def ingest_signals(conn, signals):
     for s in signals:
         raw_id = _land_raw(conn, s)
-        _upsert_event(conn, s, raw_id)
+        event_id = _upsert_event(conn, s, raw_id)
+        if s.source == "NEWS":
+            _store_article(conn, s, event_id)
 
 
 def run(sachet_limit=None, backfill_from=BACKFILL_FROM):
@@ -143,6 +158,7 @@ def run(sachet_limit=None, backfill_from=BACKFILL_FROM):
             ("SACHET", lambda: sachet.fetch(client, districts, limit=sachet_limit)),
             ("GDACS", lambda: gdacs.fetch(client, districts, backfill_from)),
             ("USGS", lambda: usgs.fetch(client, districts, backfill_from)),
+            ("NEWS", lambda: news.fetch(client, districts)),
         ]
         for name, job in jobs:
             try:

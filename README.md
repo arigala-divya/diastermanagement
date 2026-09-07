@@ -44,6 +44,7 @@ All V1 sources are **open and require no credentials**.
 | **NDMA SACHET** | Official | CAP 1.2 alerts from IMD regional offices, CWC, INCOIS and state SDMAs | Live |
 | **USGS FDSN** | Official | Earthquakes across the subcontinent, full history | Live |
 | **GDACS** | Modelled | Global multi-hazard cross-check (GLOFAS floods, cyclones) | Live |
+| **News RSS** | Reported | Google News hazard queries + The Hindu, NDTV, TOI | Live |
 | *IMD API* | Official | 28 endpoints incl. cyclone GeoJSON | **Needs key** — adapter stubbed |
 | *MOSDAC* | Official | Satellite products | **Needs privileged access** — deferred |
 
@@ -97,10 +98,27 @@ access:
 python -c "from backend.pipeline import replay; print(replay())"
 ```
 
-**LGD district codes as the join key.** SACHET tags every alert with
+**LGD district codes as the join key.** SACHET tags most alerts with
 `<cap:geocode>LGD District Code`, and the gazetteer is built on the same codes,
-so district resolution is exact rather than fuzzy string matching. This is the
-single biggest reason the pipeline is reliable.
+so district resolution is exact rather than fuzzy string matching.
+
+**...with a name-matching fallback, because not every office populates it.**
+IMD Dehradun sends no geocodes at all — only free text such as
+`"Chamoli, Bageshwar, Pithoragarh, Almora"` or `"Isolated places over Kumaun
+region"`. Those alerts were being dropped entirely. District names are now
+matched against the gazetteer, constrained to the issuing office's own state
+(`IMD Dehradun` → Uttarakhand), because India has too many duplicate district
+names — Hamirpur in UP and HP, Aurangabad in Bihar and Maharashtra — for an
+unconstrained match to be safe. Region-level alerts that name no district are
+pinned to the state centroid and flagged as state-level rather than being given
+false district precision.
+
+**News is a separate tier, never an official confirmation.** Articles enter at
+tier 3 and display as `REPORTED` in their own "Related coverage" section, kept
+visually distinct from confirming agencies. A headline is only kept if it can
+be placed in India: unplaceable stories and neighbouring-country coverage
+(Nepal's floods dominated the first run) are dropped. Only link, headline,
+publisher and snippet are stored — never article text.
 
 **Confidence is explainable, never a fabricated percentage.** A number like
 "96%" implies a calibration that does not exist, and in a disaster tool someone
@@ -182,16 +200,20 @@ objects and adding a line to `jobs` in `backend/pipeline.py`.
   carries only current alerts with no archive, so history before first
   collection comes from USGS and GDACS alone and is sparse. It fills in densely
   going forward.
-- **News ingestion is not yet implemented.** When added, store link, headline
-  and snippet only — never full article text — and keep it at `REPORTED`
-  confidence.
+- **News geolocation is headline-only** and therefore conservative. A district
+  name is accepted only when unique nationally or when a state is named in the
+  same headline; Delhi's compass-named districts (North, South, Central) are
+  ignored unless Delhi itself appears, since they match constantly in phrases
+  like "South Korea".
+- **News rarely correlates with official alerts.** Press reports and CAP
+  warnings seldom share a district and time window, so most news forms its own
+  `REPORTED` events. This is honest rather than forced.
 
 ## Roadmap
 
 1. IMD API adapter once a key is issued
 2. CWC flood forecasts and INCOIS ocean bulletins as first-class sources
 3. NCS as the authoritative Indian earthquake source alongside USGS
-4. News RSS at `REPORTED` tier, grouped by event
-5. NASA FIRMS active fire; FSI direct feed if a relationship can be arranged
-6. PostgreSQL + PostGIS (see `database/MIGRATION.md`)
-7. MOSDAC and Sentinel-1 SAR for flood-extent mapping, once access allows
+4. NASA FIRMS active fire; FSI direct feed if a relationship can be arranged
+5. PostgreSQL + PostGIS (see `database/MIGRATION.md`)
+6. MOSDAC and Sentinel-1 SAR for flood-extent mapping, once access allows

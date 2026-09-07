@@ -72,7 +72,7 @@ def events(
         if ids:
             marks = ",".join("?" * len(ids))
             for s in conn.execute(
-                f"""SELECT event_id, source, agency, tier, url, published_at
+                f"""SELECT event_id, source, agency, tier, url, headline, published_at
                     FROM event_sources WHERE event_id IN ({marks})""",
                 ids,
             ):

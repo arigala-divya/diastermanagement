@@ -1,53 +1,104 @@
 /* Hazard icon set.
  *
- * One shared 24x24 grid, 1.7 stroke weight, round caps. Designed as a family
- * so the map reads as one system. Each hazard is distinguishable by SHAPE
- * alone, not only colour, so the map stays legible in greyscale and for
- * colour-blind users - severity is carried separately by the marker ring.
+ * Drawn on a shared 24x24 grid with a 2.0 stroke and round joins. These are
+ * built to survive being rendered at 15px inside a map marker, so each glyph
+ * is a single bold silhouette rather than fine detail that turns to mush.
+ *
+ * Every hazard is distinguishable by SHAPE alone, not just colour, so the map
+ * stays readable in greyscale and for colour-blind users. Severity is carried
+ * separately by the marker's outer ring.
  */
 const HAZARD_ICONS = {
-  FLOOD: '<path d="M2 16c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 20.5c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M6 11V5.5A1.5 1.5 0 0 1 7.5 4h9A1.5 1.5 0 0 1 18 5.5V11"/><path d="M9.5 11V7.5h5V11"/>',
-  CYCLONE: '<path d="M12 12c0-3.3 2.7-6 6-6M12 12c3.3 0 6 2.7 6 6M12 12c0 3.3-2.7 6-6 6M12 12c-3.3 0-6-2.7-6-6"/><circle cx="12" cy="12" r="2.2"/>',
-  EARTHQUAKE: '<path d="M2 12h3l2.5-6 3 12 3-9 2.5 6 2-3h4"/><path d="M4 18.5h16"/>',
-  FOREST_FIRE: '<path d="M12 22c3.9 0 6.5-2.6 6.5-6 0-3.6-3-5.4-4.2-8.6C13.6 5 13.8 3 13.8 2c-2 1.2-4.6 3.6-4.6 7 0 1.6.6 2.6.6 3.4 0 1-.8 1.8-1.7 1.8-1 0-1.6-.8-1.6-2.2-1.2 1.3-1 3-1 4C5.5 19.4 8.1 22 12 22Z"/>',
-  LANDSLIDE: '<path d="M2 20h20"/><path d="M3 20 11 6l4 6"/><circle cx="16.5" cy="14.5" r="1.6"/><circle cx="20" cy="17.5" r="1.3"/><circle cx="12.5" cy="17" r="1.1"/>',
-  AVALANCHE: '<path d="M2 20h20"/><path d="M4 20 12 4l8 16"/><path d="M8.5 12.5c1.5 1.2 2.5-.8 4 .4s2.2-.7 3.4.4"/>',
-  CLOUD_BURST: '<path d="M7 15a4 4 0 0 1 .5-8 5.5 5.5 0 0 1 10.4 1.6A3.6 3.6 0 0 1 17.5 15"/><path d="M9 18l-1 3M12.5 18l-1 3M16 18l-1 3"/><path d="M12 17.5v4"/>',
-  FLOOD_URBAN: '<path d="M2 18c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>',
-  STORM_SURGE: '<path d="M2 19c3 0 3-2.5 6-2.5s3 2.5 6 2.5 3-2.5 6-2.5"/><path d="M3 13.5c4-6 8.5-8 13-8-1.5 2.5-1.5 5.5 0 8Z"/>',
-  HIGH_WAVE: '<path d="M2 18.5c3 0 3-2 6-2s3 2 6 2 3-2 6-2"/><path d="M2 12.5c2-5 6.5-7.5 11-7.5-2 3-2 6.5 0 9.5"/>',
-  TSUNAMI: '<path d="M2 20c3 0 3-2 6-2s3 2 6 2 3-2 6-2"/><path d="M2 15c0-7 5-11 11-11-3 3.5-3.5 8-1 11.5"/><path d="M17 8.5c2 .5 3.5 2 4.5 3.5"/>',
-  DUST_STORM: '<path d="M2 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M2 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M2 16h9"/><path d="M4 20h11"/>',
-  THUNDERSTORM: '<path d="M7 14a4 4 0 0 1 .5-8 5.5 5.5 0 0 1 10.4 1.6A3.6 3.6 0 0 1 17.5 14"/><path d="M13 12.5 9.5 18h3.2L11 22.5"/>',
-  LIGHTNING: '<path d="M13.5 2 5 13.5h5.5L9 22l9-12h-5.5z"/>',
-  HEAVY_RAIN: '<path d="M7 14.5a4 4 0 0 1 .5-8A5.5 5.5 0 0 1 17.9 8 3.6 3.6 0 0 1 17.5 14.5"/><path d="M8 17.5 6.8 21M12 17.5 10.8 21M16 17.5 14.8 21"/>',
-  HEATWAVE: '<circle cx="12" cy="9.5" r="4"/><path d="M12 2v1.8M12 15.2V17M19.5 9.5h-1.8M6.3 9.5H4.5M17.3 4.2l-1.3 1.3M8 13.5l-1.3 1.3M17.3 14.8 16 13.5M8 5.5 6.7 4.2"/><path d="M3 20c2 0 2-1.5 4-1.5S9 20 11 20s2-1.5 4-1.5S17 20 19 20"/>',
-  COLDWAVE: '<path d="M12 2v20M3.5 7l17 10M3.5 17l17-10"/><path d="M9 4.5 12 7l3-2.5M9 19.5 12 17l3 2.5"/>',
-  DROUGHT: '<path d="M12 3v11"/><path d="M12 9c0-2.5 2-4.5 4.5-4.5C16.5 7 14.5 9 12 9Z"/><path d="M12 12c0-2.5-2-4.5-4.5-4.5C7.5 10 9.5 12 12 12Z"/><path d="M3 18h18M5 21.5h14"/>',
-  FOG: '<path d="M3 9h13M6 13h15M3 17h12M8 21h11"/>',
-  GALE_WIND: '<path d="M2 7h12a3 3 0 1 0-3-3"/><path d="M2 12h16a3 3 0 1 1-3 3"/><path d="M2 17h9a2.5 2.5 0 1 1-2.5 2.5"/>',
-  OTHER: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.3"/>',
+  // Water — waves, rising level
+  FLOOD: {
+    d: '<path d="M2 17.5c2.2 0 2.2-1.9 4.4-1.9s2.2 1.9 4.4 1.9 2.2-1.9 4.4-1.9 2.2 1.9 4.4 1.9"/><path d="M2 21.5c2.2 0 2.2-1.9 4.4-1.9s2.2 1.9 4.4 1.9 2.2-1.9 4.4-1.9 2.2 1.9 4.4 1.9"/><path d="M6.5 13V7.2L12 3l5.5 4.2V13"/>',
+  },
+  HEAVY_RAIN: {
+    d: '<path d="M6.6 13.6A4.1 4.1 0 0 1 7.4 5.5a5.7 5.7 0 0 1 10.8 1.7 3.6 3.6 0 0 1-.7 6.4"/><path d="M8.5 17v3M12 17.5v3.5M15.5 17v3"/>',
+  },
+  CLOUD_BURST: {
+    d: '<path d="M6.6 12.6A4.1 4.1 0 0 1 7.4 4.5a5.7 5.7 0 0 1 10.8 1.7 3.6 3.6 0 0 1-.7 6.4"/><path d="M12 15v7"/><path d="M8.6 16.5 7.4 20M15.4 16.5l1.2 3.5"/>',
+  },
+  // Ocean
+  HIGH_WAVE: {
+    d: '<path d="M2 19.5c3 0 3-2.2 6-2.2s3 2.2 6 2.2 3-2.2 6-2.2"/><path d="M2.5 13.5C3.5 7 8.5 3.5 14 3.5c-2.5 3.6-2.8 8 0 11.4"/>',
+  },
+  STORM_SURGE: {
+    d: '<path d="M2 20c3 0 3-2.2 6-2.2s3 2.2 6 2.2 3-2.2 6-2.2"/><path d="M3 14c4.5-6.5 9.5-8.5 14.5-8.5-2 3-2 6.5 0 9.5"/><path d="M19 4v3M22 6.5h-3"/>',
+  },
+  TSUNAMI: {
+    d: '<path d="M2 20.5c3 0 3-2.2 6-2.2s3 2.2 6 2.2 3-2.2 6-2.2"/><path d="M2.5 15.5C2.5 7 8.5 2.5 15.5 2.5c-3.5 4-4 9-1 12.6"/><path d="M15 8.5c2.5.6 4.5 2.4 5.5 4.5"/>',
+  },
+  // Wind systems — spiral
+  CYCLONE: {
+    d: '<path d="M12 12c0-3.6 2.9-6.5 6.5-6.5M12 12c3.6 0 6.5 2.9 6.5 6.5M12 12c0 3.6-2.9 6.5-6.5 6.5M12 12c-3.6 0-6.5-2.9-6.5-6.5"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/>',
+  },
+  GALE_WIND: {
+    d: '<path d="M2 7.5h11.5A3.2 3.2 0 1 0 10.3 4"/><path d="M2 12.5h15A3.2 3.2 0 1 1 13.8 16"/><path d="M2 17.5h8.5A2.6 2.6 0 1 1 8 20.2"/>',
+  },
+  DUST_STORM: {
+    d: '<path d="M2 7h10.5A2.6 2.6 0 1 0 10 4.2"/><path d="M2 11.5h13A2.6 2.6 0 1 1 12.5 15"/><path d="M3 16h11M5 20h10"/>',
+  },
+  // Electrical
+  LIGHTNING: {
+    d: '<path d="M13.8 2 5.5 13.2h5.2L9.5 22l9-11.6h-5.4z"/>',
+    fill: true,
+  },
+  THUNDERSTORM: {
+    d: '<path d="M6.6 12.8A4.1 4.1 0 0 1 7.4 4.7a5.7 5.7 0 0 1 10.8 1.7 3.6 3.6 0 0 1-.7 6.4"/><path d="M13.2 14 9.6 19.2h3.1L11.4 23l4.8-6.1h-3z"/>',
+  },
+  // Ground
+  EARTHQUAKE: {
+    d: '<path d="M1.5 12h3.2l2.4-6.5L10.6 18l2.8-9.5 2.3 5.5 1.8-3h5"/><path d="M4 20.5h5.5M14 20.5h6"/>',
+  },
+  LANDSLIDE: {
+    d: '<path d="M2 20.5h20"/><path d="M2.5 20.5 11 5.5l3.6 6.3"/><circle cx="16.8" cy="14.6" r="1.9" fill="currentColor" stroke="none"/><circle cx="20.4" cy="18" r="1.5" fill="currentColor" stroke="none"/><circle cx="13.2" cy="17.6" r="1.3" fill="currentColor" stroke="none"/>',
+  },
+  AVALANCHE: {
+    d: '<path d="M2 20.5h20"/><path d="M3.5 20.5 12 4l8.5 16.5"/><path d="M8 13c1.7 1.4 2.8-.9 4.5.5s2.5-.8 3.8.4"/>',
+  },
+  // Temperature
+  HEATWAVE: {
+    d: '<circle cx="12" cy="8.5" r="3.6"/><path d="M12 1.8v1.9M12 13.3v1.9M18.7 8.5h-1.9M7.2 8.5H5.3M16.8 3.7l-1.4 1.4M8.6 11.9l-1.4 1.4M16.8 13.3l-1.4-1.4M8.6 5.1 7.2 3.7"/><path d="M3 19c2.2 0 2.2-1.7 4.5-1.7S9.7 19 12 19s2.2-1.7 4.5-1.7S18.7 19 21 19"/>',
+  },
+  COLDWAVE: {
+    d: '<path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10"/><path d="M9 4.3 12 6.8l3-2.5M9 19.7l3-2.5 3 2.5"/><path d="M5.6 10.9 4.7 7.3l3.6-.4M18.4 13.1l.9 3.6-3.6.4"/>',
+  },
+  DROUGHT: {
+    d: '<circle cx="17" cy="6" r="3"/><path d="M2 17h20M4 21h16"/><path d="M8 17V9M8 12.5c0-2.2-1.8-4-4-4 0 2.2 1.8 4 4 4Z"/><path d="M8 13.5c0-1.8 1.5-3.2 3.2-3.2 0 1.8-1.4 3.2-3.2 3.2Z"/>',
+  },
+  // Other
+  FOREST_FIRE: {
+    d: '<path d="M12 22.5c4 0 6.8-2.7 6.8-6.3 0-3.8-3.1-5.7-4.4-9-.2 1.4-.9 2.6-2 3.4.2-2.6-.7-5.6-3.4-8.1.3 3-1.2 4.6-2.7 6.3-1.4 1.6-2.6 3.3-2.6 6.1 0 4.2 3.4 7.6 8.3 7.6Z"/>',
+    fill: true,
+  },
+  FOG: {
+    d: '<path d="M3 8.5h14M7 12.5h14M3 16.5h13M8 20.5h11"/>',
+  },
+  OTHER: {
+    d: '<circle cx="12" cy="12" r="9.2"/><path d="M12 7.5v6M12 16.4v.3"/>',
+  },
 };
 
-/* Colour per hazard. Chosen for contrast against the dark map ground and to
- * keep related hazards in related hues (water blues, fire ambers, seismic
- * violets) without any two adjacent hues colliding. */
+/* Colour per hazard: water blues, ocean teals, storm violets, fire ambers,
+ * seismic magenta. Related hazards sit in related hues, but no two that can
+ * appear side by side share one. */
 const HAZARD_COLORS = {
-  FLOOD: '#3b9ae1', CLOUD_BURST: '#2f7fd1', HEAVY_RAIN: '#4aa8d8',
-  STORM_SURGE: '#2bb3b3', HIGH_WAVE: '#25c2c2', TSUNAMI: '#0e9ba3',
-  CYCLONE: '#7b6ef6', THUNDERSTORM: '#8f7ce8', LIGHTNING: '#c9a227',
-  EARTHQUAKE: '#b061d8', LANDSLIDE: '#c2703f', AVALANCHE: '#8fb6d6',
-  FOREST_FIRE: '#ef6c2e', HEATWAVE: '#e8562f', DROUGHT: '#c9922e',
-  COLDWAVE: '#5fc8e8', DUST_STORM: '#a8894f', FOG: '#8d99a6',
-  GALE_WIND: '#6fae8c', OTHER: '#7d8794',
+  FLOOD: '#3d9bec', CLOUD_BURST: '#2b7fd4', HEAVY_RAIN: '#54acdd',
+  STORM_SURGE: '#1fb0ae', HIGH_WAVE: '#25c7bf', TSUNAMI: '#0d9aa5',
+  CYCLONE: '#7d6bf8', THUNDERSTORM: '#9280ea', LIGHTNING: '#e3b622',
+  EARTHQUAKE: '#c065d8', LANDSLIDE: '#c4743d', AVALANCHE: '#93bcdc',
+  FOREST_FIRE: '#f4692a', HEATWAVE: '#ec4f2c', DROUGHT: '#cf9530',
+  COLDWAVE: '#5fd0ec', DUST_STORM: '#ad8b4c', FOG: '#94a1af',
+  GALE_WIND: '#63b492', OTHER: '#7d8794',
 };
 
 const SEVERITY_RANK = { INFO: 0, MINOR: 1, MODERATE: 2, SEVERE: 3, EXTREME: 4 };
 
 function hazardSvg(hazard, size = 18, color = null) {
-  const paths = HAZARD_ICONS[hazard] || HAZARD_ICONS.OTHER;
+  const spec = HAZARD_ICONS[hazard] || HAZARD_ICONS.OTHER;
   const stroke = color || HAZARD_COLORS[hazard] || HAZARD_COLORS.OTHER;
-  const filled = hazard === 'LIGHTNING' || hazard === 'FOREST_FIRE';
-  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${filled ? stroke : 'none'}"
-    stroke="${stroke}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"
+    fill="${spec.fill ? stroke : 'none'}" stroke="${stroke}" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" style="color:${stroke}">${spec.d}</svg>`;
 }

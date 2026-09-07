@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 import feedparser
 
 from ingestion.base import Signal, content_hash, log, to_utc
+from processing.geo import districts_from_text, state_centroid, state_from_agency
 from processing.taxonomy import CAP_SEVERITY, classify
 
 RSS_URL = "https://sachet.ndma.gov.in/cap_public_website/rss/rss_india.xml"
@@ -87,12 +88,33 @@ def signals_from_cap(xml_text: str, url: str, districts: dict, author: str = "")
     severity = CAP_SEVERITY.get(cap["severity"].lower(), "INFO")
     published = to_utc(cap["sent"])
 
+    hint_state = state_from_agency(agency, districts)
+
+    # Preferred path: the alert carries LGD district codes.
     targets = [d for d in (districts.get(str(c)) for c in cap["lgd_codes"]) if d]
     unresolved = [c for c in cap["lgd_codes"] if str(c) not in districts]
     if unresolved:
         # Visible gap rather than a silent mis-placement. Sikkim and Ladakh
         # codes are the known offenders; see scripts/build_gazetteer.py.
         log(f"  SACHET: unresolved LGD codes {unresolved} in {cap['identifier']}")
+
+    # Fallback: some offices (IMD Dehradun among them) send no geocodes at
+    # all, only a free-text areaDesc. Match district names within the issuing
+    # office's own state so duplicate names elsewhere cannot mis-place it.
+    if not targets:
+        targets = districts_from_text(cap["area_desc"], districts, hint_state)
+
+    # Last resort: a region-level alert ("Kumaun region", "rest districts")
+    # names no district. Pin it to the state centroid so it is still visible,
+    # flagged as state-level rather than pretending to district precision.
+    state_level = False
+    if not targets and hint_state:
+        centre = state_centroid(hint_state, districts)
+        if centre:
+            state_level = True
+            targets = [{"lgd": None, "district": "", "state": hint_state,
+                        "lat": centre[0], "lon": centre[1]}]
+
     if not targets:
         targets = [None]
 
@@ -101,7 +123,10 @@ def signals_from_cap(xml_text: str, url: str, districts: dict, author: str = "")
         out.append(
             Signal(
                 source="SACHET",
-                source_uid=f"{cap['identifier']}::{target['lgd'] if target else 'na'}",
+                source_uid=(
+                    f"{cap['identifier']}::"
+                    f"{target['lgd'] or target['district'] or 'state' if target else 'na'}"
+                ),
                 raw_uid=cap["identifier"],
                 hazard_type=hazard,
                 headline=cap["headline"] or cap["event"],

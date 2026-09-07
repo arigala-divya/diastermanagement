@@ -8,6 +8,7 @@ ground-observed, so signals are tier 2 and surface as MODELLED confidence.
 """
 
 import json
+from datetime import datetime, timezone
 
 from ingestion.base import Signal, log, to_utc
 from processing.geo import nearest_district
@@ -18,9 +19,13 @@ LICENCE = "GDACS (JRC/UN) - open, attribution required"
 
 
 def fetch(client, districts: dict, start: str, end: str = "", country: str = "India"):
-    params = {"country": country, "fromDate": start}
-    if end:
-        params["toDate"] = end
+    # GDACS rejects fromDate without toDate with a bare HTTP 400, so the end
+    # of the window is always sent, defaulting to today.
+    params = {
+        "country": country,
+        "fromDate": start,
+        "toDate": end or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    }
 
     resp = client.get(URL, params=params)
     resp.raise_for_status()
