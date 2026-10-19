@@ -1,0 +1,13 @@
+# NISAR flood monitor. Separate from the dashboard's deliberately small
+# requirements.txt: SAR processing needs the scientific stack. No GDAL -
+# GCOV carries its own coordinate arrays, so h5py + pyproj suffice.
+-r ../requirements.txt
+numpy>=2.0
+scipy>=1.13
+scikit-image>=0.24
+h5py>=3.11
+pyproj>=3.6
+pyyaml>=6.0
+python-dotenv>=1.0
+pillow>=10.0
+pytest>=8.0

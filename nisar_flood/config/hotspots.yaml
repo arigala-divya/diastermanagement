@@ -1,0 +1,43 @@
+# Top-20 river flood hotspots monitored with NISAR S-SAR GCOV.
+#
+# Chosen from CWC / NDMA flood-prone river stretches with recurrent damage.
+# Each AOI is a square of side 2*half_km centred on (lat, lon). Edit freely;
+# the pipeline picks up changes on the next run.
+#
+# Alert thresholds apply to *new* water: pixels that are water in the latest
+# scene but were dry in the baseline (the driest scene on the same orbit
+# track and frame). Override any of them per hotspot under `thresholds:`.
+
+defaults:
+  half_km: 15
+  history_start: "2026-03-01"    # earliest scene considered
+  baseline_months: [1, 2, 3, 4, 5, 11, 12]   # prefer dry-season baselines
+  thresholds:
+    watch_km2: 5          # new water area that triggers WATCH
+    alert_km2: 20         # new water area that triggers FLOOD ALERT
+    watch_increase_pct: 25    # % growth in water extent over baseline
+    alert_increase_pct: 75
+    min_pct_km2: 1        # % rules only fire above this absolute area
+    min_patch_km2: 2      # ALERT also needs one contiguous patch this big
+
+hotspots:
+  - {id: brahmaputra_dhemaji,  river: Brahmaputra,            name: "Dhemaji / Lakhimpur",          state: Assam,          lat: 27.18, lon: 94.68}
+  - {id: brahmaputra_majuli,   river: Brahmaputra,            name: "Majuli / Jorhat",              state: Assam,          lat: 26.95, lon: 94.17}
+  - {id: brahmaputra_barpeta,  river: Brahmaputra,            name: "Barpeta / Goalpara",           state: Assam,          lat: 26.20, lon: 90.95}
+  - {id: kosi_supaul,          river: Kosi,                   name: "Supaul / Saharsa",             state: Bihar,          lat: 26.05, lon: 86.62}
+  - {id: gandak_gopalganj,     river: Gandak,                 name: "W. Champaran / Gopalganj",     state: Bihar,          lat: 26.45, lon: 84.35}
+  - {id: bagmati_darbhanga,    river: "Bagmati / Adhwara",    name: "Sitamarhi / Darbhanga",        state: Bihar,          lat: 26.30, lon: 85.80}
+  - {id: ganga_bhagalpur,      river: Ganga,                  name: "Bhagalpur / Naugachia",        state: Bihar,          lat: 25.30, lon: 86.95}
+  - {id: ghaghra_bahraich,     river: Ghaghra,                name: "Bahraich / Gonda",             state: Uttar Pradesh,  lat: 27.25, lon: 81.55}
+  - {id: rapti_gorakhpur,      river: Rapti,                  name: "Gorakhpur",                    state: Uttar Pradesh,  lat: 26.75, lon: 83.35}
+  - {id: teesta_jalpaiguri,    river: "Teesta / Torsa",       name: "Jalpaiguri / Cooch Behar",     state: West Bengal,    lat: 26.50, lon: 88.75}
+  - {id: shilabati_ghatal,     river: "Shilabati / Rupnarayan", name: "Ghatal",                     state: West Bengal,    lat: 22.66, lon: 87.73}
+  - {id: mahanadi_kendrapara,  river: "Mahanadi delta",       name: "Cuttack / Kendrapara",         state: Odisha,         lat: 20.45, lon: 86.25}
+  - {id: brahmani_jajpur,      river: "Brahmani / Baitarani", name: "Jajpur / Bhadrak",             state: Odisha,         lat: 20.80, lon: 86.45}
+  - {id: godavari_bhadrachalam, river: Godavari,              name: "Bhadrachalam",                 state: Telangana,      lat: 17.67, lon: 80.89}
+  - {id: krishna_vijayawada,   river: Krishna,                name: "Vijayawada / Krishna delta",   state: Andhra Pradesh, lat: 16.45, lon: 80.70}
+  - {id: krishna_sangli,       river: "Krishna / Panchganga", name: "Kolhapur / Sangli",            state: Maharashtra,    lat: 16.78, lon: 74.42}
+  - {id: narmada_bharuch,      river: Narmada,                name: "Bharuch",                      state: Gujarat,        lat: 21.72, lon: 73.00}
+  - {id: periyar_ernakulam,    river: "Periyar / Chalakudy",  name: "Ernakulam / Thrissur",         state: Kerala,         lat: 10.20, lon: 76.35}
+  - {id: jhelum_srinagar,      river: Jhelum,                 name: "Srinagar",                     state: Jammu & Kashmir, lat: 34.08, lon: 74.80}
+  - {id: adyar_chennai,        river: "Adyar / Cooum",        name: "Chennai (urban)",              state: Tamil Nadu,     lat: 13.03, lon: 80.22}

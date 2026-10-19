@@ -14,3 +14,7 @@ data/*.db-shm
 .idea/
 Thumbs.db
 .DS_Store
+
+# NISAR flood monitor - credentials and downloaded scenes never committed
+nisar_flood/.env
+nisar_flood/data/

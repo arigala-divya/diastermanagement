@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NISAR Flood Monitor — IIRS-ISRO</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#080b10; --panel:#0e141c; --panel-2:#141c27; --panel-3:#1a2432;
+  --border:#1e2836;
+  --text:#e6edf5; --text-2:#a9b8c9; --muted:#6d7d8f;
+  --accent:#4a9eff;
+  /* status palette: fixed, always shown with a text label */
+  --s-alert:#d03b3b; --s-watch:#fab219; --s-normal:#0ca30c; --s-none:#5b6878;
+  /* chart series (categorical, dark steps), one per orbit track */
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+  --grid:#1c2531; --axis:#2c3846;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+#app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;align-items:center;gap:16px;padding:0 18px;height:52px;background:linear-gradient(180deg,#111925,#0c1219);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .mark{width:30px;height:30px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#1b4f8c,#0d2a4d);border:1px solid #2b6cb0;display:grid;place-items:center}
+.brand h1{font-size:13.5px;font-weight:600;margin:0;white-space:nowrap}
+.brand .sub{font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-weight:500}
+.statline{display:flex;gap:7px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:var(--panel-2);border:1px solid var(--border);font-size:11px;white-space:nowrap}
+.pill b{font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.btn{padding:5px 12px;border-radius:6px;background:var(--panel-3);border:1px solid #2a3a50;font-size:11.5px;font-weight:550}
+.btn:hover{border-color:var(--accent)}
+.btn[disabled]{opacity:.55;cursor:default}
+.runinfo{font-family:var(--mono);font-size:11px;color:var(--text-2);white-space:nowrap}
+
+#main{display:grid;grid-template-columns:270px 1fr 400px;min-height:0}
+aside{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:12px 10px 24px}
+.glabel{font-size:10px;font-weight:650;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:4px 4px 8px}
+.hs{display:grid;grid-template-columns:auto 1fr auto;gap:2px 9px;align-items:center;padding:8px 9px;border-radius:7px;border:1px solid transparent;cursor:pointer}
+.hs:hover{background:var(--panel-2)}
+.hs.sel{background:var(--panel-3);border-color:#2b4566}
+.hs .nm{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs .rv{grid-column:2/4;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.badge svg{width:10px;height:10px}
+.b-ALERT{background:rgba(208,59,59,.16);color:#ff8a8a;border:1px solid rgba(208,59,59,.5)}
+.b-WATCH{background:rgba(250,178,25,.12);color:#ffcf66;border:1px solid rgba(250,178,25,.45)}
+.b-NORMAL{background:rgba(12,163,12,.12);color:#6fdc6f;border:1px solid rgba(12,163,12,.4)}
+.b-NO_DATA,.b-BASELINE{background:rgba(91,104,120,.15);color:#9aa8b8;border:1px solid rgba(91,104,120,.4)}
+
+#mapwrap{position:relative;min-height:0}
+#map{position:absolute;inset:0}
+.leaflet-container{background:#05080d;font-family:var(--sans)}
+.leaflet-control-attribution{background:rgba(8,11,16,.82)!important;color:var(--muted)!important;font-size:9.5px!important}
+.leaflet-control-attribution a{color:#5a86b8!important}
+.leaflet-bar a{background:var(--panel-2)!important;color:var(--text)!important;border-color:var(--border)!important}
+.leaflet-tooltip{background:var(--panel-2);color:var(--text);border:1px solid var(--border);box-shadow:none;font-size:11.5px}
+.maplegend{position:absolute;left:12px;bottom:22px;z-index:500;background:rgba(14,20,28,.92);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11px;display:grid;gap:4px}
+.maplegend span{display:flex;align-items:center;gap:7px}
+
+#detail{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:16px 16px 40px}
+#detail::-webkit-scrollbar,aside::-webkit-scrollbar{width:8px}
+#detail::-webkit-scrollbar-thumb,aside::-webkit-scrollbar-thumb{background:#243040;border-radius:4px}
+.empty{color:var(--muted);padding:30px 6px;text-align:center}
+h2{font-size:16px;margin:0 0 2px}
+.meta{color:var(--text-2);font-size:12px}
+.sec{margin-top:18px}
+.sec h3{font-size:10px;font-weight:650;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.reasons{margin:8px 0 0;padding-left:16px;color:var(--text-2)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.kpi .v{font-size:18px;font-weight:650}
+.kpi .l{font-size:10.5px;color:var(--muted)}
+.compare{position:relative;width:100%;aspect-ratio:1;background:#05080d;border-radius:8px;overflow:hidden;border:1px solid var(--border);user-select:none}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;image-rendering:auto}
+.compare .after{clip-path:inset(0 0 0 50%)}
+.compare .chg{opacity:0;transition:opacity .15s}
+.compare.showchg .chg{opacity:1}
+.compare .bar{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 4px rgba(0,0,0,.7);pointer-events:none}
+.compare .tag{position:absolute;top:8px;font-size:10.5px;font-weight:600;background:rgba(8,11,16,.8);padding:2px 7px;border-radius:4px}
+.compare .tag.l{left:8px}.compare .tag.r{right:8px}
+.compare input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.ctrls{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:11.5px;color:var(--text-2);flex-wrap:wrap}
+.ctrls label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px}
+select{background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:11.5px;max-width:100%}
+#chart{position:relative}
+#chart svg{display:block;width:100%;height:auto}
+#chart .tt{position:absolute;pointer-events:none;background:var(--panel-3);border:1px solid #2b3a4e;border-radius:6px;padding:6px 8px;font-size:11px;white-space:nowrap;display:none;z-index:2}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--text-2);margin-bottom:4px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:10.5px;padding:4px 6px;border-bottom:1px solid var(--border)}
+td{padding:5px 6px;border-bottom:1px solid #151d28;font-variant-numeric:tabular-nums;vertical-align:top}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--panel-2)}
+tr.cur td{background:#132235}
+.alert-row{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:7px}
+.alert-row .when{font-size:11px;color:var(--muted)}
+.alert-row .res{font-size:11px;color:var(--text-2);margin-top:3px}
+.note{font-size:11px;color:var(--muted);margin-top:6px}
+@media (max-width:1100px){
+  body{overflow:auto}
+  #app{height:auto}
+  #main{grid-template-columns:1fr;grid-template-rows:auto 55vh auto}
+  aside{border-right:0;border-bottom:1px solid var(--border);max-height:40vh}
+  #detail{border-left:0}
+  header{height:auto;flex-wrap:wrap;padding:10px 16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9cc8ff" stroke-width="2" stroke-linecap="round"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M12 3v5"/></svg></div>
+      <div><h1>NISAR Flood Monitor</h1><div class="sub">IIRS-ISRO · S-SAR change detection · 20 river hotspots</div></div>
+    </div>
+    <div class="statline" id="statline"></div>
+    <span class="runinfo" id="runinfo"></span>
+    <button class="btn" id="refresh">Check for new scenes</button>
+  </header>
+  <div id="main">
+    <aside><div class="glabel">Hotspots · most severe first</div><div id="list"></div></aside>
+    <div id="mapwrap">
+      <div id="map"></div>
+      <div class="maplegend">
+        <span><i class="dot" style="background:var(--s-alert)"></i>Flood alert</span>
+        <span><i class="dot" style="background:var(--s-watch)"></i>Watch</span>
+        <span><i class="dot" style="background:var(--s-normal)"></i>Normal</span>
+        <span><i class="dot" style="background:var(--s-none)"></i>No analysis yet</span>
+      </div>
+    </div>
+    <section id="detail"><div class="empty">Select a hotspot on the map or in the list.</div></section>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
